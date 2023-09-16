@@ -5,6 +5,7 @@ import (
 	"fmt"
 	amqp "github.com/rabbitmq/amqp091-go"
 	"log"
+	"sync"
 )
 
 type Producer struct {
@@ -77,4 +78,15 @@ func (p Producer) awaitForReply(replyTo string, published PublishedMessage, hand
 	}()
 
 	return nil
+}
+
+func WaitForReply[T interface{}](i T) (MessageHandlerFunc, *sync.WaitGroup, T) {
+	var wg *sync.WaitGroup
+
+	return func(body Body) Handled {
+		body.To(i)
+		wg.Done()
+
+		return HandledSuccessfully()
+	}, wg, i
 }
