@@ -7,12 +7,12 @@ import (
 	"log"
 )
 
-type producer struct {
+type Producer struct {
 	channel *amqp.Channel
 	config  *Config
 }
 
-func (p producer) Publish(msg PublishMessage) (PublishedMessage, error) {
+func (p Producer) Publish(msg PublishMessage) (PublishedMessage, error) {
 	route, err := p.config.GetRoute(msg.message)
 	if err != nil {
 		return PublishedMessage{}, err
@@ -40,7 +40,7 @@ func (p producer) Publish(msg PublishMessage) (PublishedMessage, error) {
 	return published, err
 }
 
-func (p producer) awaitForReply(replyTo string, published PublishedMessage, handler MessageHandlerFunc) error {
+func (p Producer) awaitForReply(replyTo string, published PublishedMessage, handler MessageHandlerFunc) error {
 	queue, err := p.config.GetQueue(replyTo)
 	if err != nil {
 		queue = QueueConfig{Durable: true}

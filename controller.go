@@ -6,7 +6,7 @@ var appId = "pkg.amqp"
 
 type Controller struct {
 	*consumer
-	*producer
+	*Producer
 }
 
 func Init(
@@ -32,6 +32,6 @@ func Init(
 
 	return &Controller{
 		consumer: &consumer{ch, &config},
-		producer: &producer{ch, &config},
+		Producer: &Producer{ch, &config},
 	}, nil
 }
