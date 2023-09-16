@@ -2,12 +2,15 @@ package amqp
 
 import amqp "github.com/rabbitmq/amqp091-go"
 
+var appId = "pkg.amqp"
+
 type Controller struct {
 	*consumer
 	*producer
 }
 
 func Init(
+	appName string,
 	url string,
 	config Config,
 	consumers []Consumer,
@@ -22,6 +25,7 @@ func Init(
 		return nil, err
 	}
 
+	appId = appName
 	for _, c := range consumers {
 		config.handlers[c.Name()] = c
 	}

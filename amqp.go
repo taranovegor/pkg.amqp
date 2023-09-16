@@ -41,6 +41,7 @@ func publish(ch *amqp.Channel, cfg ProducerConfig, msg interface{}, pub amqp.Pub
 	pub.MessageId = sentMsg.ID.String()
 	pub.Timestamp = sentMsg.SentAt
 	pub.Type = reflect.TypeOf(msg).String()
+	pub.AppId = appId
 	pub.Body = body
 
 	for _, queue := range cfg.Queues {

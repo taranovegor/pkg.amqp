@@ -6,12 +6,12 @@ import (
 	"log"
 )
 
-type Acknowledge string
+type acknowledge string
 
 const (
-	Ack    Acknowledge = "ack"
-	Nack   Acknowledge = "nack"
-	Reject Acknowledge = "reject"
+	ack    acknowledge = "ack"
+	nack   acknowledge = "nack"
+	reject acknowledge = "reject"
 )
 
 type Body map[string]interface{}
@@ -22,7 +22,7 @@ func (b Body) To(i interface{}) {
 }
 
 type Handled struct {
-	ack     Acknowledge
+	ack     acknowledge
 	requeue bool
 	reply   interface{}
 }
@@ -34,15 +34,15 @@ func (h Handled) WithReply(r interface{}) Handled {
 }
 
 func HandledSuccessfully() Handled {
-	return Handled{Ack, false, nil}
+	return Handled{ack, false, nil}
 }
 
 func HandledNotSuccessfully(requeue bool) Handled {
-	return Handled{Nack, requeue, nil}
+	return Handled{nack, requeue, nil}
 }
 
 func HandledAndRejected() Handled {
-	return Handled{Reject, false, false}
+	return Handled{reject, false, false}
 }
 
 type Consumer interface {
@@ -115,10 +115,10 @@ func handleMessage(ch *amqp.Channel, msg amqp.Delivery, handler MessageHandlerFu
 	}
 
 	switch handled.ack {
-	case Nack:
+	case nack:
 		msg.Nack(false, handled.requeue)
 		break
-	case Reject:
+	case reject:
 		msg.Reject(handled.requeue)
 		break
 	default:

@@ -46,6 +46,7 @@ type RouteConfig struct {
 }
 
 type Config struct {
+	appId     string
 	consumers map[string]ConsumerConfig
 	exchanges map[string]ExchangeConfig
 	queues    map[string]QueueConfig

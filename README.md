@@ -80,7 +80,7 @@ var cfg = amqp.NewConfig(
 )
 
 func main() {
-	ctrl, err := amqp.Init(os.Getenv("AMQP_URL"), cfg, []amqp.Consumer{
+	ctrl, err := amqp.Init("pkg.amqp", os.Getenv("AMQP_URL"), cfg, []amqp.Consumer{
 		RegularConsumer{},
 		WithReplyConsumer{},
 	})
