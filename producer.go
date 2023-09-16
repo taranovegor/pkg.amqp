@@ -80,13 +80,14 @@ func (p Producer) awaitForReply(replyTo string, published PublishedMessage, hand
 	return nil
 }
 
-func WaitForReply[T interface{}](i T) (MessageHandlerFunc, *sync.WaitGroup, T) {
-	var wg *sync.WaitGroup
+func WaitForReply[T interface{}](i T) (MessageHandlerFunc, *sync.WaitGroup, *T) {
+	var wg sync.WaitGroup
+	wg.Add(1)
 
 	return func(body Body) Handled {
-		body.To(i)
+		body.To(&i)
 		wg.Done()
 
 		return HandledSuccessfully()
-	}, wg, i
+	}, &wg, &i
 }
