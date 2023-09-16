@@ -43,8 +43,9 @@ func (p producer) Publish(msg PublishMessage) (PublishedMessage, error) {
 func (p producer) awaitForReply(replyTo string, published PublishedMessage, handler MessageHandlerFunc) error {
 	queue, err := p.config.GetQueue(replyTo)
 	if err != nil {
-		queue = QueueConfig{Durable: true, AutoDelete: true}
+		queue = QueueConfig{Durable: true}
 	}
+	queue.AutoDelete = false // todo: when sending multiple messages to the queue, a problem may occur
 
 	_, err = declareQueue(p.channel, replyTo, queue)
 	if err != nil {
@@ -53,11 +54,8 @@ func (p producer) awaitForReply(replyTo string, published PublishedMessage, hand
 		return err
 	}
 
-	messages, err := consume(
-		p.channel,
-		fmt.Sprintf("%s%d", replyTo, published.CorrelationID.ID()),
-		ConsumerConfig{Queue: replyTo, NoLocal: false, NoWait: false},
-	)
+	consumerName := fmt.Sprintf("%s%d", replyTo, published.CorrelationID.ID())
+	messages, err := consume(p.channel, consumerName, ConsumerConfig{Queue: replyTo, NoLocal: false, NoWait: false})
 	if err != nil {
 		log.Println(err.Error())
 
@@ -71,6 +69,8 @@ func (p producer) awaitForReply(replyTo string, published PublishedMessage, hand
 			}
 
 			handleMessage(p.channel, msg, handler)
+
+			p.channel.Cancel(consumerName, false)
 
 			return
 		}
