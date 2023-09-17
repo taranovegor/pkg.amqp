@@ -25,7 +25,7 @@ func (p Producer) Publish(msg PublishMessage) (PublishedMessage, error) {
 
 	var publishing amqp.Publishing
 	if msg.msgType == MessageWithReply {
-		queue, err := declareQueue(p.channel, "", QueueConfig{Exclusive: true})
+		queue, err := declareQueue(p.channel, "", QueueConfig{Exclusive: true, AutoDelete: true})
 		if err != nil {
 			return PublishedMessage{}, errors.New("reply to is not defined")
 		}
