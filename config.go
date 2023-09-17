@@ -56,7 +56,6 @@ type QueueBindConfig struct {
 type ProducerConfig struct {
 	Exchange  string
 	Key       string
-	ReplyTo   string
 	Mandatory bool
 	Immediate bool
 }

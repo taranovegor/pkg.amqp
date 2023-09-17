@@ -23,39 +23,28 @@ func (p Producer) Publish(msg PublishMessage) (PublishedMessage, error) {
 		return PublishedMessage{}, err
 	}
 
-	publishing := amqp.Publishing{}
+	var publishing amqp.Publishing
 	if msg.msgType == MessageWithReply {
-		if prod.ReplyTo == "" {
+		queue, err := declareQueue(p.channel, "", QueueConfig{Exclusive: true})
+		if err != nil {
 			return PublishedMessage{}, errors.New("reply to is not defined")
 		}
 
-		publishing.ReplyTo = prod.ReplyTo
+		publishing.ReplyTo = queue.Name
 	}
 
 	published, err := publish(p.channel, prod, msg.message, publishing)
+
 	if msg.msgType == MessageWithReply {
-		err = p.awaitForReply(prod.ReplyTo, published, msg.handler)
+		err = p.awaitForReply(publishing.ReplyTo, published, msg.handler)
 	}
 
 	return published, err
 }
 
 func (p Producer) awaitForReply(replyTo string, published PublishedMessage, handler BodyHandler) error {
-	queue, err := p.config.GetQueue(replyTo)
-	if err != nil {
-		queue = QueueConfig{Durable: true}
-	}
-	queue.AutoDelete = false // todo: when sending multiple messages to the queue, a problem may occur
-
-	_, err = declareQueue(p.channel, replyTo, queue)
-	if err != nil {
-		log.Println(err.Error())
-
-		return err
-	}
-
 	consumerName := fmt.Sprintf("%s%d", replyTo, published.CorrelationID.ID())
-	messages, err := consume(p.channel, consumerName, ConsumerConfig{Queue: replyTo, NoLocal: false, NoWait: false})
+	messages, err := consume(p.channel, consumerName, ConsumerConfig{Queue: replyTo})
 	if err != nil {
 		log.Println(err.Error())
 
