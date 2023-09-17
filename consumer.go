@@ -107,11 +107,7 @@ func handleMessage(ch *amqp.Channel, msg amqp.Delivery, handler BodyHandler) {
 			reply = NoReply{}
 		}
 
-		publish(ch, ProducerConfig{
-			Queues: []string{msg.ReplyTo},
-		}, reply, amqp.Publishing{
-			CorrelationId: msg.CorrelationId,
-		})
+		publish(ch, ProducerConfig{Key: msg.ReplyTo}, reply, amqp.Publishing{CorrelationId: msg.CorrelationId})
 	}
 
 	switch handled.ack {

@@ -5,7 +5,6 @@ import (
 	"encoding/json"
 	"github.com/google/uuid"
 	amqp "github.com/rabbitmq/amqp091-go"
-	"log"
 	"reflect"
 	"time"
 )
@@ -44,14 +43,7 @@ func publish(ch *amqp.Channel, cfg ProducerConfig, msg interface{}, pub amqp.Pub
 	pub.AppId = appId
 	pub.Body = body
 
-	for _, queue := range cfg.Queues {
-		err = ch.PublishWithContext(context.Background(), cfg.Exchange, queue, cfg.Mandatory, cfg.Immediate, pub)
-		if err != nil {
-			log.Println(err.Error())
-		}
-	}
-
-	return sentMsg, nil
+	return sentMsg, ch.PublishWithContext(context.Background(), cfg.Exchange, cfg.Key, cfg.Mandatory, cfg.Immediate, pub)
 }
 
 func consume(ch *amqp.Channel, name string, cfg ConsumerConfig) (<-chan amqp.Delivery, error) {

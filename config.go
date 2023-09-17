@@ -34,7 +34,7 @@ type QueueConfig struct {
 
 type ProducerConfig struct {
 	Exchange  string
-	Queues    []string
+	Key       string
 	ReplyTo   string
 	Mandatory bool
 	Immediate bool
