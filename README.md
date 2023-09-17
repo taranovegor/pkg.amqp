@@ -25,6 +25,20 @@ type MessageReply struct {
 	OriginText string
 }
 
+type LogRegularConsumer struct {
+	amqp.Consumer
+}
+
+func (h LogRegularConsumer) Name() string {
+	return "consumer_log_regular"
+}
+
+func (h LogRegularConsumer) Handle(body amqp.Body) amqp.Handled {
+	log.Printf("Logged message: %+v", body)
+
+	return amqp.HandledSuccessfully()
+}
+
 type RegularConsumer struct {
 	amqp.Consumer
 }
@@ -61,17 +75,26 @@ func (h WithReplyConsumer) Handle(body amqp.Body) amqp.Handled {
 
 var cfg = amqp.NewConfig(
 	map[string]amqp.ConsumerConfig{
-		"consumer_regular":    {Queue: "regular", Exclusive: false, NoLocal: false, NoWait: false},
-		"consumer_with_reply": {Queue: "request", Exclusive: true, NoLocal: true, NoWait: true},
+		"consumer_log_regular": {Queue: "msg.log", Exclusive: false, NoLocal: false, NoWait: false},
+		"consumer_regular":     {Queue: "msg.process", Exclusive: false, NoLocal: false, NoWait: false},
+		"consumer_with_reply":  {Queue: "msg.with_reply", Exclusive: true, NoLocal: true, NoWait: true},
 	},
-	map[string]amqp.ExchangeConfig{},
+	map[string]amqp.ExchangeConfig{
+		"msg.topic": {Kind: amqp.ExchangeTopic},
+	},
 	map[string]amqp.QueueConfig{
-		"regular": {Durable: false, AutoDelete: false, Exclusive: false, NoWait: false},
-		"request": {Durable: true, AutoDelete: true, Exclusive: true, NoWait: true},
+		"msg.log":        {},
+		"msg.process":    {},
+		"msg.with_reply": {},
+	},
+	map[string]amqp.QueueBindConfig{
+		"msg.log":        {Key: "msg.*", Exchange: "msg.topic"},
+		"msg.process":    {Key: "msg.regular", Exchange: "msg.topic"},
+		"msg.with_reply": {Key: "msg.with_reply", Exchange: "msg.topic"},
 	},
 	map[string]amqp.ProducerConfig{
-		"producer_regular":            {Queues: []string{"regular"}},
-		"producer_awaiting_for_reply": {Queues: []string{"request"}, ReplyTo: "response"},
+		"producer_regular":            {Exchange: "msg.topic", Key: "msg.regular"},
+		"producer_awaiting_for_reply": {Exchange: "msg.topic", Key: "msg.with_reply", ReplyTo: "response"},
 	},
 	map[interface{}]amqp.RouteConfig{
 		RegularMessage{}:  {Producer: "producer_regular"},
@@ -81,6 +104,7 @@ var cfg = amqp.NewConfig(
 
 func main() {
 	ctrl, err := amqp.Init("pkg.amqp", os.Getenv("AMQP_URL"), cfg, []amqp.Consumer{
+		LogRegularConsumer{},
 		RegularConsumer{},
 		WithReplyConsumer{},
 	})

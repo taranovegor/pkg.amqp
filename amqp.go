@@ -9,12 +9,16 @@ import (
 	"time"
 )
 
+func declareExchange(ch *amqp.Channel, name string, cfg ExchangeConfig) error {
+	return ch.ExchangeDeclare(name, cfg.Kind.String(), cfg.Durable, cfg.AutoDelete, cfg.Internal, cfg.NoWait, cfg.Args)
+}
+
 func declareQueue(ch *amqp.Channel, name string, cfg QueueConfig) (amqp.Queue, error) {
 	return ch.QueueDeclare(name, cfg.Durable, cfg.AutoDelete, cfg.Exclusive, cfg.NoWait, cfg.Args)
 }
 
-func declareExchange(ch *amqp.Channel, name string, cfg ExchangeConfig) error {
-	return ch.ExchangeDeclare(name, cfg.Kind, cfg.Durable, cfg.AutoDelete, cfg.Internal, cfg.NoWait, cfg.Args)
+func declareQueueBinding(ch *amqp.Channel, name string, cfg QueueBindConfig) error {
+	return ch.QueueBind(name, cfg.Key, cfg.Exchange, cfg.NoWait, cfg.Args)
 }
 
 func publish(ch *amqp.Channel, cfg ProducerConfig, msg interface{}, pub amqp.Publishing) (PublishedMessage, error) {

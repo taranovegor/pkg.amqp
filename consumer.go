@@ -57,11 +57,24 @@ type consumer struct {
 
 func (c consumer) Consume() {
 	for name, cfg := range c.config.exchanges {
-		declareExchange(c.channel, name, cfg)
+		err := declareExchange(c.channel, name, cfg)
+		if err != nil {
+			log.Println(err)
+		}
 	}
 
 	for name, cfg := range c.config.queues {
-		declareQueue(c.channel, name, cfg)
+		_, err := declareQueue(c.channel, name, cfg)
+		if err != nil {
+			log.Println(err)
+		}
+	}
+
+	for name, cfg := range c.config.queueBindings {
+		err := declareQueueBinding(c.channel, name, cfg)
+		if err != nil {
+			log.Println(err)
+		}
 	}
 
 	for name, handler := range c.config.handlers {

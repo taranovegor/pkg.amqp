@@ -2,10 +2,24 @@ package amqp
 
 import (
 	"errors"
+	amqp "github.com/rabbitmq/amqp091-go"
 	"reflect"
 )
 
+const (
+	ExchangeDirect  ExchangeKind = amqp.ExchangeDirect
+	ExchangeFanout  ExchangeKind = amqp.ExchangeFanout
+	ExchangeTopic   ExchangeKind = amqp.ExchangeTopic
+	ExchangeHeaders ExchangeKind = amqp.ExchangeHeaders
+)
+
 var ConfigNotFound = errors.New("config not found")
+
+type ExchangeKind string
+
+func (e ExchangeKind) String() string {
+	return string(e)
+}
 
 type ConsumerConfig struct {
 	Queue     string
@@ -16,7 +30,7 @@ type ConsumerConfig struct {
 }
 
 type ExchangeConfig struct {
-	Kind       string
+	Kind       ExchangeKind
 	Durable    bool
 	AutoDelete bool
 	Internal   bool
@@ -32,6 +46,13 @@ type QueueConfig struct {
 	Args       map[string]interface{}
 }
 
+type QueueBindConfig struct {
+	Key      string
+	Exchange string
+	NoWait   bool
+	Args     map[string]interface{}
+}
+
 type ProducerConfig struct {
 	Exchange  string
 	Key       string
@@ -41,24 +62,25 @@ type ProducerConfig struct {
 }
 
 type RouteConfig struct {
-	Type     interface{}
 	Producer string
 }
 
 type Config struct {
-	appId     string
-	consumers map[string]ConsumerConfig
-	exchanges map[string]ExchangeConfig
-	queues    map[string]QueueConfig
-	producers map[string]ProducerConfig
-	routing   map[string]RouteConfig
-	handlers  map[string]Consumer
+	appId         string
+	consumers     map[string]ConsumerConfig
+	exchanges     map[string]ExchangeConfig
+	queues        map[string]QueueConfig
+	queueBindings map[string]QueueBindConfig
+	producers     map[string]ProducerConfig
+	routing       map[string]RouteConfig
+	handlers      map[string]Consumer
 }
 
 func NewConfig(
 	consumers map[string]ConsumerConfig,
 	exchanges map[string]ExchangeConfig,
 	queues map[string]QueueConfig,
+	queueBindings map[string]QueueBindConfig,
 	producers map[string]ProducerConfig,
 	routing map[interface{}]RouteConfig,
 ) Config {
@@ -68,12 +90,13 @@ func NewConfig(
 	}
 
 	return Config{
-		consumers: consumers,
-		exchanges: exchanges,
-		queues:    queues,
-		producers: producers,
-		routing:   rm,
-		handlers:  make(map[string]Consumer),
+		consumers:     consumers,
+		exchanges:     exchanges,
+		queues:        queues,
+		queueBindings: queueBindings,
+		producers:     producers,
+		routing:       rm,
+		handlers:      make(map[string]Consumer),
 	}
 }
 
@@ -99,6 +122,14 @@ func (c Config) GetQueue(name string) (QueueConfig, error) {
 	}
 
 	return QueueConfig{}, ConfigNotFound
+}
+
+func (c Config) GetQueueBind(name string) (QueueBindConfig, error) {
+	if qb, f := c.queueBindings[name]; f {
+		return qb, nil
+	}
+
+	return QueueBindConfig{}, ConfigNotFound
 }
 
 func (c Config) GetProducer(name string) (ProducerConfig, error) {
