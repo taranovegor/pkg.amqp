@@ -2,6 +2,7 @@ package amqp
 
 import (
 	"github.com/google/uuid"
+	"sync"
 	"time"
 )
 
@@ -11,12 +12,28 @@ const (
 )
 
 type MessageType string
-type MessageHandlerFunc func(Body) Handled
+type BodyHandler func(Body) Handled
+type AwaitForBodyHandler struct {
+	wg      sync.WaitGroup
+	Handler BodyHandler
+}
+
+func (h *AwaitForBodyHandler) add(delta int) {
+	h.wg.Add(delta)
+}
+
+func (h *AwaitForBodyHandler) Wait() {
+	h.wg.Wait()
+}
+
+func (h *AwaitForBodyHandler) Done() {
+	h.wg.Done()
+}
 
 type PublishMessage struct {
 	msgType MessageType
 	message interface{}
-	handler MessageHandlerFunc
+	handler BodyHandler
 }
 
 func MessageToPublish(msg interface{}) PublishMessage {
@@ -26,7 +43,7 @@ func MessageToPublish(msg interface{}) PublishMessage {
 	}
 }
 
-func MessageToPublishWithReply(msg interface{}, handler MessageHandlerFunc) PublishMessage {
+func MessageToPublishWithReply(msg interface{}, handler BodyHandler) PublishMessage {
 	return PublishMessage{
 		msgType: MessageWithReply,
 		message: msg,

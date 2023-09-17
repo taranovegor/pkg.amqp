@@ -89,7 +89,7 @@ func (c consumer) Consume() {
 	}
 }
 
-func handleMessage(ch *amqp.Channel, msg amqp.Delivery, handler MessageHandlerFunc) {
+func handleMessage(ch *amqp.Channel, msg amqp.Delivery, handler BodyHandler) {
 	log.Printf("received a message for handler: %s", msg.Body)
 
 	body := Body{}
