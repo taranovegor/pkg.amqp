@@ -70,10 +70,12 @@ func (c consumer) Consume() {
 		}
 	}
 
-	for name, cfg := range c.config.queueBindings {
-		err := declareQueueBinding(c.channel, name, cfg)
-		if err != nil {
-			log.Println(err)
+	for name, cfgs := range c.config.queueBindings {
+		for _, cfg := range cfgs {
+			err := declareQueueBinding(c.channel, name, cfg)
+			if err != nil {
+				log.Println(err)
+			}
 		}
 	}
 

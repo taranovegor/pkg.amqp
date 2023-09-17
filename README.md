@@ -87,10 +87,10 @@ var cfg = amqp.NewConfig(
 		"msg.process":    {},
 		"msg.with_reply": {},
 	},
-	map[string]amqp.QueueBindConfig{
-		"msg.log":        {Key: "msg.*", Exchange: "msg.topic"},
-		"msg.process":    {Key: "msg.regular", Exchange: "msg.topic"},
-		"msg.with_reply": {Key: "msg.with_reply", Exchange: "msg.topic"},
+	map[string][]amqp.QueueBindConfig{
+		"msg.log":        {{Key: "msg.*", Exchange: "msg.topic"}},
+		"msg.process":    {{Key: "msg.regular", Exchange: "msg.topic"}},
+		"msg.with_reply": {{Key: "msg.with_reply", Exchange: "msg.topic"}},
 	},
 	map[string]amqp.ProducerConfig{
 		"producer_regular":            {Exchange: "msg.topic", Key: "msg.regular"},

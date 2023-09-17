@@ -70,7 +70,7 @@ type Config struct {
 	consumers     map[string]ConsumerConfig
 	exchanges     map[string]ExchangeConfig
 	queues        map[string]QueueConfig
-	queueBindings map[string]QueueBindConfig
+	queueBindings map[string][]QueueBindConfig
 	producers     map[string]ProducerConfig
 	routing       map[string]RouteConfig
 	handlers      map[string]Consumer
@@ -80,7 +80,7 @@ func NewConfig(
 	consumers map[string]ConsumerConfig,
 	exchanges map[string]ExchangeConfig,
 	queues map[string]QueueConfig,
-	queueBindings map[string]QueueBindConfig,
+	queueBindings map[string][]QueueBindConfig,
 	producers map[string]ProducerConfig,
 	routing map[interface{}]RouteConfig,
 ) Config {
@@ -124,12 +124,12 @@ func (c Config) GetQueue(name string) (QueueConfig, error) {
 	return QueueConfig{}, ConfigNotFound
 }
 
-func (c Config) GetQueueBind(name string) (QueueBindConfig, error) {
+func (c Config) GetQueueBind(name string) ([]QueueBindConfig, error) {
 	if qb, f := c.queueBindings[name]; f {
 		return qb, nil
 	}
 
-	return QueueBindConfig{}, ConfigNotFound
+	return []QueueBindConfig{}, ConfigNotFound
 }
 
 func (c Config) GetProducer(name string) (ProducerConfig, error) {
