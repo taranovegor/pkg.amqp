@@ -3,6 +3,7 @@ package amqp
 import (
 	"context"
 	"encoding/json"
+	"fmt"
 	"github.com/google/uuid"
 	amqp "github.com/rabbitmq/amqp091-go"
 	"reflect"
@@ -51,5 +52,5 @@ func publish(ch *amqp.Channel, cfg ProducerConfig, msg interface{}, pub amqp.Pub
 }
 
 func consume(ch *amqp.Channel, name string, cfg ConsumerConfig) (<-chan amqp.Delivery, error) {
-	return ch.Consume(cfg.Queue, name, false, cfg.Exclusive, cfg.NoLocal, cfg.NoWait, cfg.Args)
+	return ch.Consume(cfg.Queue, fmt.Sprintf("%s.%s", name, appId), false, cfg.Exclusive, cfg.NoLocal, cfg.NoWait, cfg.Args)
 }
